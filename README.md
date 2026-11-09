@@ -38,7 +38,7 @@ Extract the `SealCheck` folder into your `Interface/AddOns` directory.
 ## Known limitations
 - In combat the addon can't read your buffs, so it estimates seal time from your casts. If a seal is dispelled mid-fight, SealCheck won't know until combat ends.
 - If your own spell cast is hidden from addons during a fight, or you `/reload` mid-fight, warnings are paused for the rest of that fight.
-- Seal and Judgement detection currently match English spell names ("Seal of ...", "Judgement").
+- Seal detection currently matches English spell names ("Seal of ...").
 
 ## License
 MIT

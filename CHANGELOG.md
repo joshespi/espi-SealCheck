@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Removed: Judgement no longer clears the tracked seal (on Forever it doesn't consume your seal), fixing a false NO SEAL after judging.
+
 ## 1.0.0
 Initial release.
 

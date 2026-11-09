@@ -2,9 +2,9 @@
 -- Buffs are secret in combat, so seal state comes from:
 --   out of combat: real aura scan (also learns each seal's duration + icon)
 --   in combat:     your own seal casts + learned duration
+-- Judgement doesn't consume the seal on Forever, so it isn't tracked.
 
 local SEAL_PATTERN = "^Seal of "
-local JUDGEMENT = "Judgement"   -- consumes the active seal
 local DEFAULT_DURATION = 30
 local TICK = 0.2
 local TEST_SECS = 3
@@ -282,12 +282,6 @@ local function OnCast(spellID)
         return true
     end
     local name = C_Spell.GetSpellName(spellID)
-    if name == JUDGEMENT then
-        -- out of combat UNIT_AURA rescans; in combat we have to infer it
-        if not inCombat or sealExpires == 0 then return false end
-        sealExpires = 0
-        return true
-    end
     if not IsSeal(name) then return false end
     sealExpires = GetTime() + (db.durations[name] or DEFAULT_DURATION)
     SetIcon(C_Spell.GetSpellTexture(spellID))
