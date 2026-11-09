@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Check release metadata
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          ver_re=$(printf '%s' "$ver" | sed 's/\./\\./g')
+          grep -qE '^## X-Curse-Project-ID: *[0-9]+' SealCheck.toc \
+            || { echo "::error::Add ## X-Curse-Project-ID to SealCheck.toc"; exit 1; }
+          grep -qE "^## Version: *v?${ver_re}[[:space:]]*$" SealCheck.toc \
+            || { echo "::error::SealCheck.toc ## Version doesn't match tag ${ver}"; exit 1; }
+          grep -qE "^## ${ver_re}[[:space:]]*$" CHANGELOG.md \
+            || { echo "::error::CHANGELOG.md has no '## ${ver}' entry"; exit 1; }
+      - uses: BigWigsMods/packager@v2
