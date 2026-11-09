@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.0.1
+
 - Removed: Judgement no longer clears the tracked seal (on Forever it doesn't consume your seal), fixing a false NO SEAL after judging.
 
 ## 1.0.0
+
 Initial release.
 
 - In-combat "NO SEAL" warning for Paladins, with an optional sound alert.
