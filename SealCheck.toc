@@ -1,0 +1,13 @@
+## Interface: 16001
+## Title: Espi SealCheck
+## Notes: Warns in combat when no Seal is active. /seal config for options.
+## Author: joshe
+## Category: Combat
+## Version: 1.0.0
+## IconTexture: Interface\Icons\Ability_ThunderBolt
+## SavedVariables: SealCheckDB
+## X-License: MIT
+## X-Category: Combat
+## X-Curse-Project-ID: 1793360
+
+SealCheck.lua
