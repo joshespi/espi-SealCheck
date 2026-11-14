@@ -10,6 +10,7 @@ Buffs are hidden ("secret") in combat, so it tracks your seal by watching your o
 - **SEAL EXPIRING** cue with countdown (default 5s before it drops)
 - Optional repeating sound while unsealed
 - **NO AUTO ATTACK** warning when you're in combat but not auto-attacking
+- **TOO FAR** / **FACE TARGET** warning when auto attack is on but your swings can't land
 - Combat-start grace period so it doesn't nag while you cast your opening seal
 - Optional hiding while mounted or in a vehicle
 - Draggable, resizable icon; options panel via `/seal config`
@@ -25,7 +26,7 @@ Buffs are hidden ("secret") in combat, so it tracks your seal by watching your o
 | `test` | Preview the alert for 3 seconds |
 | `toggle` | Enable / disable the addon |
 | `sound` | Toggle the warning sound |
-| `attack` | Toggle the "NO AUTO ATTACK" warning |
+| `attack` | Toggle the "NO AUTO ATTACK" and "TOO FAR" / "FACE TARGET" warnings |
 | `mounted` / `vehicle` | Toggle hiding while mounted / in a vehicle |
 | `size <16-256>` | Icon size in pixels |
 | `warn <sec>` | Expiring-warning time (0 = off) |

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+- Added: orange "TOO FAR" / "FACE TARGET" warning when auto attack is on but your swings can't land (out of melee range or facing the wrong way). Shares the `/seal attack` toggle.
+
 ## 1.0.2
 
 - Added: orange "NO AUTO ATTACK" warning when you're in combat with an attackable, engaged target but aren't auto-attacking. Silent; toggle with `/seal attack` or the options panel.

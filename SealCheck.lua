@@ -11,6 +11,12 @@ local TEST_SECS = 3
 local FALLBACK_ICON = "Interface\\Icons\\Ability_ThunderBolt"
 local ATTACK_ICON = "Interface\\Icons\\Ability_MeleeDamage"
 local AUTO_ATTACK_ID = 6603
+local SWING_HOLD = 3    -- seconds a failed-swing warning stays up after the last error
+
+-- Red error text the client prints when an auto-attack swing can't land.
+local SWING_ERRORS = {}
+if ERR_BADATTACKPOS then SWING_ERRORS[ERR_BADATTACKPOS] = "toofar" end        -- "You are too far away!"
+if ERR_BADATTACKFACING then SWING_ERRORS[ERR_BADATTACKFACING] = "facing" end  -- "You are facing the wrong way!"
 
 local defaults = {
     enabled = true,
@@ -30,6 +36,8 @@ local VISUALS = {
     alert  = { color = { 1, 0.25, 0.25 }, text = "NO SEAL", pulse = true },
     warn   = { color = { 1, 0.85, 0.2 },  text = "SEAL EXPIRING" },
     noattack = { color = { 1, 0.5, 0.1 }, text = "NO AUTO ATTACK", icon = ATTACK_ICON },
+    toofar = { color = { 1, 0.5, 0.1 },   text = "TOO FAR", icon = ATTACK_ICON },
+    facing = { color = { 1, 0.5, 0.1 },   text = "FACE TARGET", icon = ATTACK_ICON },
     unlock = { color = { 0.3, 1, 0.4 },   text = "DRAG ME" },
 }
 
@@ -47,6 +55,8 @@ local lastPing = 0
 local unlocked = false
 local testUntil = 0
 local autoAttacking = false
+local swingFail             -- "toofar" | "facing": why the last swing couldn't land
+local swingFailUntil = 0    -- GetTime() that warning lapses unless the error repeats
 
 local function Print(msg)
     print("|cffff5555Espi SealCheck|r: " .. msg)
@@ -135,10 +145,12 @@ local function CombatState(now)
         end
     end
 
-    if settled and db.attackAlert and not autoAttacking
+    if settled and db.attackAlert
         and UnitExists("target") and UnitCanAttack("player", "target")
         and not UnitIsDeadOrGhost("target") and UnitAffectingCombat("target") then
-        return "noattack"
+        if not autoAttacking then return "noattack" end
+        -- auto attack is on, but swings are bouncing off range/facing
+        if now < swingFailUntil then return swingFail end
     end
     return nil
 end
@@ -218,7 +230,7 @@ local NUMBERS = {
 local TOGGLES = {
     { key = "enabled",     panel = "Enable Espi SealCheck" },
     { key = "sound",       panel = "Play warning sound",      cmd = "sound",   chat = "sound" },
-    { key = "attackAlert", panel = "Warn when not auto attacking", cmd = "attack", chat = "auto attack warning" },
+    { key = "attackAlert", panel = "Warn when not auto attacking or swings can't land", cmd = "attack", chat = "auto attack warning" },
     { key = "hideMounted", panel = "Hide while mounted",      cmd = "mounted", chat = "hide while mounted" },
     { key = "hideVehicle", panel = "Hide while in a vehicle", cmd = "vehicle", chat = "hide in vehicle" },
 }
@@ -436,6 +448,8 @@ ev:SetScript("OnEvent", function(self, event, ...)
         self:RegisterEvent("PLAYER_DEAD")
         self:RegisterEvent("PLAYER_ENTER_COMBAT")
         self:RegisterEvent("PLAYER_LEAVE_COMBAT")
+        self:RegisterEvent("PLAYER_TARGET_CHANGED")
+        self:RegisterEvent("UI_ERROR_MESSAGE")
         self:RegisterUnitEvent("UNIT_AURA", "player")
         self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
         self:SetScript("OnUpdate", OnTick)
@@ -456,6 +470,20 @@ ev:SetScript("OnEvent", function(self, event, ...)
 
     elseif event == "PLAYER_LEAVE_COMBAT" then
         autoAttacking = false
+        swingFailUntil = 0
+
+    elseif event == "PLAYER_TARGET_CHANGED" then
+        swingFailUntil = 0
+
+    elseif event == "UI_ERROR_MESSAGE" then
+        -- (errorType, message) on current clients, (message) on old ones
+        local a, b = ...
+        local msg = b or a
+        if issecret(msg) or type(msg) ~= "string" then return end
+        local fail = SWING_ERRORS[msg]
+        if not fail then return end
+        swingFail = fail
+        swingFailUntil = GetTime() + SWING_HOLD
 
     elseif event == "PLAYER_REGEN_DISABLED" then
         inCombat = true
@@ -465,6 +493,7 @@ ev:SetScript("OnEvent", function(self, event, ...)
     elseif event == "PLAYER_REGEN_ENABLED" then
         inCombat = false
         blind = false
+        swingFailUntil = 0
         ScanAuras()
 
     elseif event == "PLAYER_DEAD" then
