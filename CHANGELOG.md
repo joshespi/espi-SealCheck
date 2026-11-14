@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added: orange "NO AUTO ATTACK" warning when you're in combat with an attackable, engaged target but aren't auto-attacking. Silent; toggle with `/seal attack` or the options panel.
+
 ## 1.0.1
 
 - Removed: Judgement no longer clears the tracked seal (on Forever it doesn't consume your seal), fixing a false NO SEAL after judging.

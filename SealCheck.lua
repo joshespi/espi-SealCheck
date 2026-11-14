@@ -9,6 +9,8 @@ local DEFAULT_DURATION = 30
 local TICK = 0.2
 local TEST_SECS = 3
 local FALLBACK_ICON = "Interface\\Icons\\Ability_ThunderBolt"
+local ATTACK_ICON = "Interface\\Icons\\Ability_MeleeDamage"
+local AUTO_ATTACK_ID = 6603
 
 local defaults = {
     enabled = true,
@@ -17,6 +19,7 @@ local defaults = {
     point = { "CENTER", "UIParent", "CENTER", 0, 180 },
     warnTime = 5,        -- seconds left to show the "expiring" cue, 0 = off
     repeatEvery = 0,     -- re-ping sound every N sec while unsealed, 0 = off
+    attackAlert = true,  -- warn when in combat but not auto attacking
     grace = 1,           -- seconds after combat start before alerting
     hideMounted = true,
     hideVehicle = true,
@@ -26,6 +29,7 @@ local defaults = {
 local VISUALS = {
     alert  = { color = { 1, 0.25, 0.25 }, text = "NO SEAL", pulse = true },
     warn   = { color = { 1, 0.85, 0.2 },  text = "SEAL EXPIRING" },
+    noattack = { color = { 1, 0.5, 0.1 }, text = "NO AUTO ATTACK", icon = ATTACK_ICON },
     unlock = { color = { 0.3, 1, 0.4 },   text = "DRAG ME" },
 }
 
@@ -42,6 +46,7 @@ local timerText = ""
 local lastPing = 0
 local unlocked = false
 local testUntil = 0
+local autoAttacking = false
 
 local function Print(msg)
     print("|cffff5555Espi SealCheck|r: " .. msg)
@@ -105,8 +110,7 @@ end
 
 local function SetIcon(tex)
     if tex and not issecret(tex) then
-        db.lastIcon = tex
-        icon:SetTexture(tex)
+        db.lastIcon = tex   -- applied to the frame by ApplyVisual
     end
 end
 
@@ -117,22 +121,26 @@ end
 local ev = CreateFrame("Frame")
 
 local function CombatState(now)
-    if not db.enabled or not inCombat or blind then return nil end
-
-    local state
-    if now >= sealExpires then
-        if now < combatStart + db.grace then return nil end
-        state = "alert"
-    elseif db.warnTime > 0 and sealExpires - now <= db.warnTime then
-        state = "warn"
-    else
-        return nil
-    end
-
+    if not db.enabled or not inCombat then return nil end
     if UnitIsDeadOrGhost("player") then return nil end
     if db.hideMounted and IsMounted() then return nil end
     if db.hideVehicle and UnitInVehicle and UnitInVehicle("player") then return nil end
-    return state
+
+    local settled = now >= combatStart + db.grace
+    if not blind then
+        if now >= sealExpires then
+            if settled then return "alert" end
+        elseif db.warnTime > 0 and sealExpires - now <= db.warnTime then
+            return "warn"
+        end
+    end
+
+    if settled and db.attackAlert and not autoAttacking
+        and UnitExists("target") and UnitCanAttack("player", "target")
+        and not UnitIsDeadOrGhost("target") and UnitAffectingCombat("target") then
+        return "noattack"
+    end
+    return nil
 end
 
 local function GetState(now)
@@ -155,6 +163,7 @@ local function ApplyVisual(state)
         return
     end
     local r, g, b = unpack(v.color)
+    icon:SetTexture(v.icon or db.lastIcon or FALLBACK_ICON)
     icon:SetVertexColor(r, g, b)
     border:SetVertexColor(r, g, b)
     label:SetTextColor(r, g, b)
@@ -209,6 +218,7 @@ local NUMBERS = {
 local TOGGLES = {
     { key = "enabled",     panel = "Enable Espi SealCheck" },
     { key = "sound",       panel = "Play warning sound",      cmd = "sound",   chat = "sound" },
+    { key = "attackAlert", panel = "Warn when not auto attacking", cmd = "attack", chat = "auto attack warning" },
     { key = "hideMounted", panel = "Hide while mounted",      cmd = "mounted", chat = "hide while mounted" },
     { key = "hideVehicle", panel = "Hide while in a vehicle", cmd = "vehicle", chat = "hide in vehicle" },
 }
@@ -415,7 +425,6 @@ ev:SetScript("OnEvent", function(self, event, ...)
                 db[k] = type(v) == "table" and { unpack(v) } or v
             end
         end
-        icon:SetTexture(db.lastIcon or FALLBACK_ICON)
         ApplyLayout()
 
         local ok, err = pcall(BuildOptions)
@@ -425,18 +434,28 @@ ev:SetScript("OnEvent", function(self, event, ...)
         self:RegisterEvent("PLAYER_REGEN_DISABLED")
         self:RegisterEvent("PLAYER_REGEN_ENABLED")
         self:RegisterEvent("PLAYER_DEAD")
+        self:RegisterEvent("PLAYER_ENTER_COMBAT")
+        self:RegisterEvent("PLAYER_LEAVE_COMBAT")
         self:RegisterUnitEvent("UNIT_AURA", "player")
         self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
         self:SetScript("OnUpdate", OnTick)
 
     elseif event == "PLAYER_ENTERING_WORLD" then
         inCombat = InCombatLockdown()
+        local isCurrent = C_Spell and C_Spell.IsCurrentSpell or IsCurrentSpell
+        autoAttacking = isCurrent and isCurrent(AUTO_ATTACK_ID) and true or false
         if inCombat then
             -- reloaded mid-fight: auras are secret and we missed the casts
             combatStart = GetTime()
             blind = true
         end
         ScanAuras()
+
+    elseif event == "PLAYER_ENTER_COMBAT" then
+        autoAttacking = true
+
+    elseif event == "PLAYER_LEAVE_COMBAT" then
+        autoAttacking = false
 
     elseif event == "PLAYER_REGEN_DISABLED" then
         inCombat = true
@@ -471,7 +490,7 @@ local HELP = {
     "/seal config - open options panel",
     "/seal unlock | lock - move the icon",
     "/seal test - preview the alert",
-    "/seal toggle | sound | mounted | vehicle - toggles",
+    "/seal toggle | sound | attack | mounted | vehicle - toggles",
     "/seal size <16-256> | warn <sec> | repeat <sec> | grace <sec>",
     "/seal reset | status",
 }
