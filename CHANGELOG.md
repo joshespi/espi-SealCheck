@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.2
 
 - Added: orange "NO AUTO ATTACK" warning when you're in combat with an attackable, engaged target but aren't auto-attacking. Silent; toggle with `/seal attack` or the options panel.
 
