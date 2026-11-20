@@ -1,9 +1,9 @@
 ## Interface: 16001
-## Title: Espi SealCheck
+## Title: Espi Paladin Utils
 ## Notes: Warns in combat when no Seal is active. /seal config for options.
 ## Author: joshe
 ## Category: Combat
-## Version: 1.0.3
+## Version: 1.0.4
 ## IconTexture: Interface\Icons\Ability_ThunderBolt
 ## SavedVariables: SealCheckDB
 ## X-License: MIT

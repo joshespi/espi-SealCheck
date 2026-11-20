@@ -1,6 +1,6 @@
-# Espi SealCheck
+# Espi Paladin Utils
 
-Espi SealCheck is a lightweight Paladin addon that warns you when you're in combat with **no Seal active**.
+Espi Paladin Utils is a lightweight Paladin addon that warns you when you're in combat with **no Seal active**.
 
 Buffs are hidden ("secret") in combat, so it tracks your seal by watching your own seal casts and the seal duration it learned out of combat. Nothing to configure to get started.
 

@@ -4,6 +4,7 @@
 --   in combat:     your own seal casts + learned duration
 -- Judgement doesn't consume the seal on Forever, so it isn't tracked.
 
+local ADDON_TITLE = "Espi Paladin Utils"
 local SEAL_PATTERN = "^Seal of "
 local DEFAULT_DURATION = 30
 local TICK = 0.2
@@ -59,7 +60,7 @@ local swingFail             -- "toofar" | "facing": why the last swing couldn't 
 local swingFailUntil = 0    -- GetTime() that warning lapses unless the error repeats
 
 local function Print(msg)
-    print("|cffff5555Espi SealCheck|r: " .. msg)
+    print("|cffff5555" .. ADDON_TITLE .. "|r: " .. msg)
 end
 
 local function IsSeal(name)
@@ -228,7 +229,7 @@ local NUMBERS = {
 }
 
 local TOGGLES = {
-    { key = "enabled",     panel = "Enable Espi SealCheck" },
+    { key = "enabled",     panel = "Enable " .. ADDON_TITLE },
     { key = "sound",       panel = "Play warning sound",      cmd = "sound",   chat = "sound" },
     { key = "attackAlert", panel = "Warn when not auto attacking or swings can't land", cmd = "attack", chat = "auto attack warning" },
     { key = "hideMounted", panel = "Hide while mounted",      cmd = "mounted", chat = "hide while mounted" },
@@ -314,11 +315,11 @@ end
 
 local function BuildOptions()
     local panel = CreateFrame("Frame")
-    panel.name = "Espi SealCheck"
+    panel.name = ADDON_TITLE
 
     local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalHuge")
     title:SetPoint("TOPLEFT", 16, -16)
-    title:SetText("Espi SealCheck")
+    title:SetText(ADDON_TITLE)
 
     local sub = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
     sub:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)

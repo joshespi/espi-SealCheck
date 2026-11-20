@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4
+
+- Changed: addon renamed to Espi Paladin Utils (display name only; settings and `/seal` commands are unchanged).
+
 ## 1.0.3
 
 - Added: orange "TOO FAR" / "FACE TARGET" warning when auto attack is on but your swings can't land (out of melee range or facing the wrong way). Shares the `/seal attack` toggle.
